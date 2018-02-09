@@ -16,10 +16,10 @@
 
 class modElementTemplateTvGetListProcessor extends modObjectGetListProcessor {
     public $classKey = 'modTemplate';
+    public $languageTopics = array('template', 'lexicon:category');
     public $primaryKeyField = 'template';
     public $objectType = 'template';
     public $permission = array('view_tv' => true, 'view_template' => true);
-    public $languageTopics = array('template');
 
     /**
      * Prepare conditions for TV list
@@ -84,6 +84,15 @@ class modElementTemplateTvGetListProcessor extends modObjectGetListProcessor {
      */
     public function prepareRow(xPDOObject $object) {
         $tvArray = $object->get(array('id','name','description','tv_rank','category_name'));
+
+        $category = $object->get('category_name');
+
+        if ('category.' . $category == ($lexicon = $this->modx->lexicon('category.' . $category))) {
+            $tvArray['category_name'] = $category;
+        } else {
+            $tvArray['category_name'] = $lexicon;
+        }
+
         $tvArray['access'] = (boolean)$object->get('access');
 
         $tvArray['perm'] = array();

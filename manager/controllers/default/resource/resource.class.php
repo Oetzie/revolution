@@ -99,7 +99,7 @@ abstract class ResourceManagerController extends modManagerController {
      * @return array
      */
     public function getLanguageTopics() {
-        return array('resource');
+        return array('resource', 'lexicon:category', 'lexicon:tv');
     }
 
     /**
@@ -256,9 +256,16 @@ abstract class ResourceManagerController extends modManagerController {
         $categories = array();
         /** @var modCategory $cat */
         foreach ($cats as $cat) {
-            $categories[$cat->get('id')] = $cat->toArray();
-            $categories[$cat->get('id')]['tvs'] = array();
-            $categories[$cat->get('id')]['tvCount'] = 0;
+            $categoryArray = $cat->toArray();
+
+            if ('category.' . $categoryArray['category'] != ($lexicon = $this->modx->lexicon('category.' . $categoryArray['category']))) {
+                $categoryArray['category'] =  $lexicon;
+            }
+
+            $categoryArray['tvs'] = array();
+            $categoryArray['tvCount'] = 0;
+
+            $categories[$cat->get('id')] = $categoryArray;
         }
 
         $categories[0] = array(
@@ -335,6 +342,14 @@ abstract class ResourceManagerController extends modManagerController {
 
                         /* add to tv/category map */
                         $tvMap[$tv->get('id')] = $tv->category;
+
+                        if ('tv.' . $tv->get('name') != ($lexicon = $this->modx->lexicon('tv.' . $tv->get('name')))) {
+                            $tv->set('caption', $lexicon);
+                        }
+
+                        if ('tv.' . $tv->get('name') .'_desc' != ($lexicon = $this->modx->lexicon('tv.' . $tv->get('name'). '_desc'))) {
+                            $tv->set('description', $lexicon);
+                        }
 
                         /* add TV to category array */
                         $categories[$cat]['tvs'][] = $tv;

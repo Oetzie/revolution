@@ -14,7 +14,7 @@ require_once (dirname(__DIR__).'/getlist.class.php');
  */
 class modTemplateGetListProcessor extends modElementGetListProcessor {
     public $classKey = 'modTemplate';
-    public $languageTopics = array('template','category');
+    public $languageTopics = array('template', 'category', 'lexicon:template', 'lexicon:category');
     public $defaultSortField = 'templatename';
     public $permission = 'view_template';
 
@@ -49,8 +49,23 @@ class modTemplateGetListProcessor extends modElementGetListProcessor {
 
     public function prepareRow(xPDOObject $object) {
         $objectArray = $object->toArray();
-        $objectArray['category_name']= $object->get('category_name');
+
+        if ('category.' . $objectArray['category_name'] != ($lexicon = $this->modx->lexicon('category.' . $objectArray['category_name']))) {
+            $objectArray['category_name'] = $lexicon;
+        }
+
+        if (empty($objectArray['description'])) {
+            if ('template.' . $objectArray['templatename'] . '_desc' != ($lexicon = $this->modx->lexicon('template.' . $objectArray['templatename'] . '_desc'))) {
+                $objectArray['description'] = $lexicon;
+            }
+        }
+
+        if ('template.' . $objectArray['templatename'] != ($lexicon = $this->modx->lexicon('template.' . $objectArray['templatename']))) {
+            $objectArray['templatename'] = $lexicon;
+        }
+
         unset($objectArray['content']);
+
         return $objectArray;
     }
 }

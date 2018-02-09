@@ -22,7 +22,7 @@ class modElementGetNodesProcessor extends modProcessor {
         return $this->modx->hasPermission('element_tree');
     }
     public function getLanguageTopics() {
-        return array('category','element');
+        return array('category', 'element', 'lexicon:category', 'lexicon:template', 'lexicon:tv');
     }
 
     public function initialize() {
@@ -267,8 +267,9 @@ class modElementGetNodesProcessor extends modProcessor {
             if (!$category->checkPolicy('list')) continue;
 
             $idNote = $this->modx->hasPermission('tree_show_element_ids') ? ' (' . $category->get('id') . ')' : '';
+
             $nodes[] = array(
-                'text' => strip_tags($category->get('category')).$idNote,
+                'text' => $this->getNameFromLexicon($category->get('category'), 'category') . $idNote,
                 'id' => 'n_category_'.$category->get('id'),
                 'pk' => $category->get('id'),
                 'data' => $category->toArray(),
@@ -334,8 +335,9 @@ class modElementGetNodesProcessor extends modProcessor {
             }
 
             $cc = ($category->get('elementCount') > 0) ? ' (' . $category->get('elementCount') . ')' : '';
+
             $nodes[] = array(
-                'text' => strip_tags($category->get('category')) . $cc,
+                'text' => $this->getNameFromLexicon($category->get('category'), 'category') . $cc,
                 'id' => 'n_'.$map[0].'_category_'.($category->get('id') != null ? $category->get('id') : 0),
                 'pk' => $category->get('id'),
                 'category' => $category->get('id'),
@@ -369,7 +371,6 @@ class modElementGetNodesProcessor extends modProcessor {
         /** @var modElement $element */
         foreach ($elements as $element) {
             if (!$element->checkPolicy('list')) continue;
-            $name = $elementIdentifier == 'template' ? $element->get('templatename') : $element->get('name');
 
             $class = array();
             if ($canNewElement) $class[] = 'pnew';
@@ -387,8 +388,17 @@ class modElementGetNodesProcessor extends modProcessor {
             }
 
             $idNote = $showElementIds ? ' (' . $element->get('id') . ')' : '';
+
+            if ($elementIdentifier == 'template') {
+                $name = $this->getNameFromLexicon($element->get('templatename'), 'template');
+            } elseif ($elementIdentifier == 'tv') {
+                $name = $this->getNameFromLexicon($element->get('name'), 'tv');
+            } else {
+                $name = strip_tags($element->get('name'));
+            }
+
             $nodes[] = array(
-                'text' => strip_tags($name) . $idNote,
+                'text' => $name . $idNote,
                 'id' => 'n_'.$elementIdentifier.'_element_'.$element->get('id').'_'.$element->get('category'),
                 'pk' => $element->get('id'),
                 'category' => $categoryId,
@@ -461,7 +471,7 @@ class modElementGetNodesProcessor extends modProcessor {
             $cc = $elCount > 0 ? ' ('.$elCount.')' : '';
 
             $nodes[] = array(
-                'text' => strip_tags($category->get('category')).$cc,
+                'text' => $this->getNameFromLexicon($category->get('category'), 'category').$cc,
                 'id' => 'n_'.$map[1].'_category_'.($category->get('id') != null ? $category->get('id') : 0),
                 'pk' => $category->get('id'),
                 'category' => $category->get('id'),
@@ -570,6 +580,16 @@ class modElementGetNodesProcessor extends modProcessor {
 
         }
         return $return;
+    }
+
+    public function getNameFromLexicon($name, $type) {
+        $name = strip_tags($name);
+
+        if ($type . '.' . $name != ($lexicon = $this->modx->lexicon($type . '.' . $name))) {
+            return $lexicon;
+        }
+
+        return $name;
     }
 }
 return 'modElementGetNodesProcessor';

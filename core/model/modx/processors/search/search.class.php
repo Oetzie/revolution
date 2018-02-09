@@ -16,6 +16,10 @@ class modSearchProcessor extends modProcessor
         return $this->modx->hasPermission('search');
     }
 
+    public function getLanguageTopics() {
+        return array('lexicon:template', 'lexicon:tv');
+    }
+
     /**
      * @return string JSON formatted results
      */
@@ -255,12 +259,24 @@ class modSearchProcessor extends modProcessor
         $collection = $this->modx->getCollection($class, $c);
         /** @var modTemplate $record */
         foreach ($collection as $record) {
-            $this->results[] = array(
+            $recordArray = array(
                 'name' => $record->get('templatename'),
                 '_action' => 'element/template/update&id=' . $record->get('id'),
                 'description' => $record->get('description'),
                 'type' => $type,
             );
+
+            if (empty($recordArray['description'])) {
+                if ('template.' . $recordArray['name'] . '_desc' != ($lexicon = $this->modx->lexicon('template.' . $recordArray['name'] . '_desc'))) {
+                    $recordArray['description'] = $lexicon;
+                }
+            }
+
+            if ('template.' . $recordArray['name'] != ($lexicon = $this->modx->lexicon('template.' . $recordArray['name']))) {
+                $recordArray['name'] = $lexicon;
+            }
+
+            $this->results[] = $recordArray;
         }
     }
 
@@ -305,12 +321,18 @@ class modSearchProcessor extends modProcessor
         $collection = $this->modx->getCollection($class, $c);
         /** @var modTemplate $record */
         foreach ($collection as $record) {
-            $this->results[] = array(
+            $recordArray = array(
                 'name' => $record->get('name'),
                 '_action' => 'element/tv/update&id=' . $record->get('id'),
                 'description' => $record->get('caption'),
                 'type' => $type,
             );
+
+            if ('tv.' . $recordArray['name'] != ($lexicon = $this->modx->lexicon('tv.' . $recordArray['name']))) {
+                $recordArray['name'] = $lexicon;
+            }
+
+            $this->results[] = $recordArray;
         }
     }
 

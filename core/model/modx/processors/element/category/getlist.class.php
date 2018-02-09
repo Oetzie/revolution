@@ -13,7 +13,7 @@
  */
 class modElementCategoryGetListProcessor extends modObjectGetListProcessor {
     public $classKey = 'modCategory';
-    public $languageTopics = array('category');
+    public $languageTopics = array('category', 'lexicon:category');
     public $defaultSortField = 'category';
     public $permission = 'view_category';
 
@@ -47,11 +47,18 @@ class modElementCategoryGetListProcessor extends modObjectGetListProcessor {
             if (!$category->checkPolicy('list')) continue;
 
             $categoryArray = $category->toArray();
-            $categoryArray['name'] = $category->get('category');
+
+            $name = $category->get('category');
+
+            if ('category.' . $name == ($lexicon = $this->modx->lexicon('category.' . $name))) {
+                $categoryArray['name'] = $name;
+            } else {
+                $categoryArray['name'] = $lexicon;
+            }
 
             $list[] = $categoryArray;
 
-            $this->includeCategoryChildren($list, $category->Children, $categoryArray['name']);
+            $this->includeCategoryChildren($list, $category->Children, $categoryArray['name'], 1);
         }
 
         $list = $this->afterIteration($list);
@@ -59,18 +66,25 @@ class modElementCategoryGetListProcessor extends modObjectGetListProcessor {
         return $list;
     }
 
-    public function includeCategoryChildren(&$list, $children, $nestedName){
+    public function includeCategoryChildren(&$list, $children, $nestedName, $depth) {
         if ($children) {
             /** @var modCategory $child */
             foreach ($children as $child) {
                 if (!$child->checkPolicy('list')) continue;
 
                 $categoryArray = $child->toArray();
-                $categoryArray['name'] = $nestedName . ' — ' . $child->get('category');
+
+                $name = $child->get('category');
+
+                if ('category.'.$name == ($lexicon = $this->modx->lexicon('category.'.$name))) {
+                    $categoryArray['name'] = $nestedName . ' - ' .$name;
+                } else {
+                    $categoryArray['name'] = $nestedName . ' - ' . $lexicon;
+                }
 
                 $list[] = $categoryArray;
 
-                $this->includeCategoryChildren($list, $child->Children, $categoryArray['name']);
+                $this->includeCategoryChildren($list, $child->Children, $categoryArray['name'], $depth++);
             }
         }
     }
